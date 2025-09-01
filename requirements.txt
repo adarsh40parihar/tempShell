@@ -1,0 +1,5 @@
+flask
+mysql-connector-python
+kubernetes
+python-dotenv
+docker
