@@ -1,3 +1,74 @@
+# Environment files with sensitive data
 .env
-venv
+*.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# Python
+venv/
+env/
+*.pyc
 __pycache__/
+*.pyo
+*.pyd
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build outputs
+build/
+dist/
+*.egg-info/
+
+# Local development guides with sensitive info
+LOCAL_DEV_GUIDE.md
+K8S_DEPLOYMENT_GUIDE.md
+*.local.md
+secrects.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kubernetes secrets (never commit these!)
+k8s/secret-generated.yaml
+k8s/*-secret.yaml
+*-secret.yaml
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage/
+
+# Backup files
+*.bak
+*.backup
+*~
+secrects.md

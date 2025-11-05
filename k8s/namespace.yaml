@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tempshell
+  labels:
+    name: tempshell
+    managed-by: tempshell
