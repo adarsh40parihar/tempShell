@@ -26,8 +26,8 @@ class Settings(BaseSettings):
     POD_IMAGE: str = "ubuntu:22.04"
     POD_CPU_REQUEST: str = "100m"
     POD_CPU_LIMIT: str = "500m"
-    POD_MEMORY_REQUEST: str = "128Mi"
-    POD_MEMORY_LIMIT: str = "256Mi"
+    POD_MEMORY_REQUEST: str = "256Mi"
+    POD_MEMORY_LIMIT: str = "512Mi"
     POD_TIMEOUT_SECONDS: int = 3600
     
     # CORS - Parse from string to list

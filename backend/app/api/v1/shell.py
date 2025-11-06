@@ -41,6 +41,29 @@ async def execute_command(
         
         pod_id = user_data.get('shell_pod_id')
         
+        # Check if pod exists and is running (if pod_id is set)
+        if pod_id:
+            try:
+                pod_status = k8s_service.get_pod_status(pod_id)
+                if pod_status["status"] == "not_found":
+                    # Pod doesn't exist anymore, clear it from database
+                    logger.warning(f"Pod {pod_id} not found for user {username}, creating new one")
+                    pod_id = None
+                    cursor.execute(
+                        "UPDATE users SET shell_pod_id = NULL WHERE username = %s",
+                        (username,)
+                    )
+                    conn.commit()
+            except Exception as e:
+                logger.error(f"Error checking pod status: {e}")
+                # Clear invalid pod_id
+                pod_id = None
+                cursor.execute(
+                    "UPDATE users SET shell_pod_id = NULL WHERE username = %s",
+                    (username,)
+                )
+                conn.commit()
+        
         # Create pod if it doesn't exist
         if not pod_id:
             try:

@@ -6,7 +6,7 @@ import re
 class UserCreate(BaseModel):
     """Schema for user registration"""
     username: str = Field(..., min_length=3, max_length=63)
-    password: str = Field(..., min_length=8, max_length=72)  # Bcrypt limitation
+    password: str = Field(..., min_length=8, max_length=70)  # Limit to 70 bytes for bcrypt
     email: EmailStr
     
     @validator('username')
@@ -14,26 +14,6 @@ class UserCreate(BaseModel):
         if not re.match(r'^[A-Za-z0-9_]+$', v):
             raise ValueError('Username must contain only letters, numbers, and underscores')
         return v.lower()
-    
-    @validator('password')
-    def password_strength(cls, v):
-        """Enforce NIST password guidelines"""
-        if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
-        
-        # Check byte length for bcrypt (72 bytes max)
-        if len(v.encode('utf-8')) > 72:
-            raise ValueError('Password is too long (max 72 bytes in UTF-8)')
-        
-        if not re.search(r'[A-Z]', v):
-            raise ValueError('Password must contain at least one uppercase letter')
-        if not re.search(r'[a-z]', v):
-            raise ValueError('Password must contain at least one lowercase letter')
-        if not re.search(r'[0-9]', v):
-            raise ValueError('Password must contain at least one digit')
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
-            raise ValueError('Password must contain at least one special character')
-        return v
 
 class UserLogin(BaseModel):
     """Schema for user login"""

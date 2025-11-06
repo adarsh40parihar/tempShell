@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.api.v1 import auth, shell
 from app.db.database import init_db
+from app.services.k8s_service import K8sService
 import logging
 
 logging.basicConfig(
@@ -17,6 +18,12 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Initializing database...")
     init_db()
+    
+    # Cleanup old shell pods
+    logger.info("Cleaning up old shell pods...")
+    k8s_service = K8sService()
+    k8s_service.cleanup_old_pods()
+    
     logger.info("Application startup complete")
     yield
     # Shutdown

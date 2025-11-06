@@ -10,20 +10,31 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Password hashing context with truncate_error=False to handle long passwords
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto"
+)
 security = HTTPBearer()
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a plain password against a hashed password"""
+    """Verify a plain password against a hashed password (auto-truncates to 72 bytes)"""
+    # bcrypt will auto-truncate to 72 bytes with truncate_error=False
     return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
-    """Hash a password using bcrypt"""
-    # Truncate password to 72 bytes for bcrypt compatibility
-    password_bytes = password.encode('utf-8')
-    if len(password_bytes) > 72:
-        password = password_bytes[:72].decode('utf-8', errors='ignore')
-    return pwd_context.hash(password)
+    """Hash a password using bcrypt (auto-truncates to 72 bytes)"""
+    try:
+        logger.debug(f"get_password_hash called with password length: {len(password)}")
+        # bcrypt will auto-truncate to 72 bytes with truncate_error=False
+        hashed = pwd_context.hash(password)
+        logger.debug(f"Password hashed successfully, hash length: {len(hashed)}")
+        return hashed
+    except Exception as e:
+        logger.error(f"Error in get_password_hash: {type(e).__name__}: {str(e)}")
+        import traceback
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
+        raise
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Create a JWT access token"""

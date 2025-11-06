@@ -3,10 +3,14 @@ from app.models.schemas import UserCreate, UserLogin, Token
 from app.core.security import get_password_hash, verify_password, create_access_token, create_refresh_token
 from app.db.database import Database
 import logging
+import traceback
 from datetime import datetime
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# Set logging level to DEBUG for detailed logs
+logging.basicConfig(level=logging.DEBUG)
 
 @router.post("/signup", status_code=status.HTTP_201_CREATED, response_model=dict)
 async def signup(user: UserCreate):
@@ -53,11 +57,15 @@ async def signup(user: UserCreate):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Signup error for {user.username}: {e}")
+        error_trace = traceback.format_exc()
+        logger.error(f"Signup error for {user.username}:")
+        logger.error(f"Error type: {type(e).__name__}")
+        logger.error(f"Error message: {str(e)}")
+        logger.error(f"Full traceback:\n{error_trace}")
         conn.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Registration failed. Please try again."
+            detail=f"Registration failed: {str(e)}"
         )
     finally:
         cursor.close()
@@ -140,10 +148,14 @@ async def login(user: UserLogin):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Login error for {user.username}: {e}")
+        error_trace = traceback.format_exc()
+        logger.error(f"Login error for {user.username}:")
+        logger.error(f"Error type: {type(e).__name__}")
+        logger.error(f"Error message: {str(e)}")
+        logger.error(f"Full traceback:\n{error_trace}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Login failed. Please try again."
+            detail=f"Login failed: {str(e)}"
         )
     finally:
         cursor.close()

@@ -88,6 +88,7 @@ class K8sService:
                     client.V1Container(
                         name="shell",
                         image=settings.POD_IMAGE,
+                        image_pull_policy="Never",  # Use local image, don't pull from registry
                         command=["sleep", str(settings.POD_TIMEOUT_SECONDS)],
                         security_context=security_context,
                         resources=resources,
@@ -206,3 +207,40 @@ class K8sService:
                 return {"status": "not_found", "created_at": None}
             logger.error(f"Failed to get pod status: {e}")
             return {"status": "error", "created_at": None}
+    
+    def cleanup_old_pods(self):
+        """Clean up all old tempshell user pods (except running ones)"""
+        if not self.enabled:
+            logger.warning("Kubernetes not available. Skipping pod cleanup.")
+            return
+        
+        try:
+            # List all pods with tempshell label
+            pods = self.v1.list_namespaced_pod(
+                namespace=self.namespace,
+                label_selector="managed-by=tempshell-backend"
+            )
+            
+            cleaned_count = 0
+            for pod in pods.items:
+                pod_name = pod.metadata.name
+                pod_status = pod.status.phase
+                
+                # Delete pods that are not Running (Failed, Succeeded, Unknown, etc.)
+                if pod_status in ["Failed", "Succeeded", "Unknown", "Error"]:
+                    try:
+                        self.v1.delete_namespaced_pod(
+                            name=pod_name,
+                            namespace=self.namespace,
+                            body=client.V1DeleteOptions(grace_period_seconds=0)
+                        )
+                        logger.info(f"Cleaned up old pod {pod_name} with status {pod_status}")
+                        cleaned_count += 1
+                    except ApiException as e:
+                        logger.warning(f"Failed to delete pod {pod_name}: {e}")
+            
+            if cleaned_count > 0:
+                logger.info(f"Cleaned up {cleaned_count} old shell pods")
+            
+        except ApiException as e:
+            logger.error(f"Failed to list pods for cleanup: {e}")
