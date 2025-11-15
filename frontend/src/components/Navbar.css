@@ -22,9 +22,9 @@
 .navbar-logo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-decoration: none !important;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
   color: #61dafb;
   transition: all 0.3s ease;
@@ -36,12 +36,13 @@
 }
 
 .logo-icon {
-  font-size: 28px;
+  font-size: 24px;
   text-decoration: none !important;
 }
 
 .logo-text {
-  background: linear-gradient(135deg, #61dafb, #a78bfa);
+background: linear-gradient(135deg, #ff2dc9 0%, #a14bfd 40%, #4f7cff 75%, #37d7ff 100%);
+
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
