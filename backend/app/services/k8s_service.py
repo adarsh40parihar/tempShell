@@ -3,7 +3,7 @@ from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 from app.core.config import settings
 import hashlib
-import secrets
+import secrets  # Secure unique pod name banana
 import logging
 import time
 
@@ -243,4 +243,4 @@ class K8sService:
                 logger.info(f"Cleaned up {cleaned_count} old shell pods")
             
         except ApiException as e:
-            logger.error(f"Failed to list pods for cleanup: {e}")
+            logger.error(f"Failed to list pods for cleanup: {e}")    
