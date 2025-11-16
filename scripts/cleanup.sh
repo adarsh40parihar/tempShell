@@ -1,40 +1,39 @@
 #!/bin/bash
-
+# List Everything in Specific Namespace (tempshell)
+kubectl get all -n tempshell
 set -e
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-echo -e "${RED}╔════════════════════════════════════════╗${NC}"
-echo -e "${RED}║   TempShell Cleanup Script            ║${NC}"
-echo -e "${RED}╚════════════════════════════════════════╝${NC}"
+echo "=== TempShell Cleanup Script ==="
 echo ""
 
-echo -e "${YELLOW}⚠️  This will delete all TempShell resources${NC}"
-read -p "Are you sure you want to continue? (yes/no): " confirm
+echo "WARNING: This will delete all TempShell resources"
+read -p "Are you sure you want to continue? (y/n): " confirm
 
-if [ "$confirm" != "yes" ]; then
-    echo -e "${BLUE}Cleanup cancelled${NC}"
+if [ "$confirm" != "y" ]; then
+    echo "Cleanup cancelled"
     exit 0
 fi
 
 echo ""
-echo -e "${YELLOW}🧹 Cleaning up TempShell deployment...${NC}"
+echo "Checking if minikube is running..."
+if ! minikube status > /dev/null 2>&1; then
+    echo "ERROR: Minikube is not running. Please start minikube first."
+    echo "Run: minikube start"
+    exit 1
+fi
+
+echo "Cleaning up TempShell deployment..."
 
 # Delete namespace (this will delete everything in it)
-echo -e "${BLUE}Deleting namespace and all resources...${NC}"
+echo "Deleting namespace and all resources..."
 kubectl delete namespace tempshell --ignore-not-found=true
 
-echo -e "${YELLOW}⏳ Waiting for namespace deletion...${NC}"
+echo "Waiting for namespace deletion..."
 kubectl wait --for=delete namespace/tempshell --timeout=60s 2>/dev/null || true
 
 echo ""
-echo -e "${GREEN}╔════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║     Cleanup Complete! ✨               ║${NC}"
-echo -e "${GREEN}╚════════════════════════════════════════╝${NC}"
-echo ""
-echo -e "${BLUE}All TempShell resources have been removed${NC}"
+echo "=== Cleanup Complete ==="
+echo "All TempShell resources have been removed"
+
+# List Everything in All Namespaces
+kubectl get all --all-namespaces

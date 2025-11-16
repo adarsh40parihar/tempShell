@@ -13,7 +13,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-@asynccontextmanager
+@asynccontextmanager    #Context Manager = automatic setup + automatic cleanup.”
 async def lifespan(app: FastAPI):
     # Startup
     logger.info("Initializing database...")
@@ -25,8 +25,11 @@ async def lifespan(app: FastAPI):
     k8s_service.cleanup_old_pods()
     
     logger.info("Application startup complete")
-    yield
+
+    yield    # <-- yaha app start hoti hai
+    
     # Shutdown
+    k8s_service.cleanup_old_pods()
     logger.info("Shutting down application...")
 
 app = FastAPI(
@@ -34,6 +37,9 @@ app = FastAPI(
     version="2.0.0",
     description="Secure temporary shell service with Kubernetes isolation",
     lifespan=lifespan,
+    #lifespan ek special function hota hai jisko FastAPI bolta hai:
+        # “App start ho rahi hai → kya karna hai?”
+        # “App band ho rahi hai → kya cleanup karna hai?”
     docs_url="/api/docs" if settings.ENVIRONMENT == "development" else None,
     redoc_url="/api/redoc" if settings.ENVIRONMENT == "development" else None
 )

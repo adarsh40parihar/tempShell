@@ -4,6 +4,7 @@
   padding: 0;
   position: relative;
   overflow: hidden;
+  width: 100%;
 }
 
 .home-container::before {
@@ -52,9 +53,9 @@
 }
 
 .home-content {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 80px 40px;
+  padding: 80px 60px;
   position: relative;
   z-index: 1;
 }
