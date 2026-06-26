@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const response = await axios.post(`${API_URL}/api/v1/auth/login`, {
+      const response = await axios.post(`${API_URL}/api/auth/login`, {
         username,
         password,
       });
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (username, password, email) => {
     try {
-      await axios.post(`${API_URL}/api/v1/auth/signup`, {
+      await axios.post(`${API_URL}/api/auth/signup`, {
         username,
         password,
         email,
@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axios.delete(`${API_URL}/api/v1/shell/terminate`);
+      await axios.delete(`${API_URL}/api/shell/terminate`);
     } catch (error) {
       console.error("Error terminating shell:", error);
     }

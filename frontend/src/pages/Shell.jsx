@@ -35,7 +35,7 @@ const Shell = () => {
       { type: "welcome", content: "Welcome to TempShell." },
       {
         type: "welcome",
-        content: "Your commands run in an isolated Kubernetes environment.",
+        content: "Your commands run in an isolated, secure environment.",
       },
       { type: "welcome", content: 'Type "help" to get started.' },
     ]);
@@ -59,7 +59,7 @@ const Shell = () => {
     ]);
 
     try {
-      const res = await axios.post(`${API_URL}/api/v1/shell/execute`, {
+      const res = await axios.post(`${API_URL}/api/shell/execute`, {
         command: trimmed,
       });
 
@@ -210,7 +210,7 @@ const Shell = () => {
         <div className="shell-footer">
           <span className="footer-status">
             <span className="status-dot"></span>
-            Connected to Kubernetes Pod
+            Connected and Ready
           </span>
           <span className="footer-hint">
             💡 Pro tip: Use arrow keys to navigate history

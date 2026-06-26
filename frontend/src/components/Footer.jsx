@@ -76,16 +76,8 @@ function Footer() {
           </p>
           <div className="footer-badges">
             <span className="badge">
-              <span className="badge-icon">🔒</span>
-              NIST Compliant
-            </span>
-            <span className="badge">
-              <span className="badge-icon">☸️</span>
-              Kubernetes Powered
-            </span>
-            <span className="badge">
               <span className="badge-icon">⚡</span>
-              99.9% Uptime
+              TempShell
             </span>
           </div>
         </div>

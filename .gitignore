@@ -47,11 +47,6 @@ secrects.md
 .DS_Store
 Thumbs.db
 
-# Kubernetes secrets (never commit these!)
-k8s/secret-generated.yaml
-k8s/*-secret.yaml
-*-secret.yaml
-
 # Database
 *.db
 *.sqlite

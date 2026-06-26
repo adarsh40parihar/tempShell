@@ -1,9 +1,10 @@
 .footer {
-  background: linear-gradient(180deg, rgba(15, 15, 35, 0.95), rgba(10, 10, 25, 1));
-  border-top: 1px solid rgba(97, 218, 251, 0.2);
-  color: #e2e8f0;
+  background: var(--white);
+  border-top: 2px solid var(--primary-green);
+  color: var(--text-dark);
   position: relative;
   overflow: hidden;
+  margin-top: 60px;
 }
 
 .footer::before {
@@ -12,8 +13,8 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #61dafb, #a78bfa, #61dafb, transparent);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary-green), transparent);
   animation: shimmer 3s ease-in-out infinite;
 }
 
@@ -27,7 +28,7 @@
   margin: 0 auto;
   padding: 60px 40px 40px 40px;
   display: grid;
-  grid-template-columns: 2fr repeat(4, 1fr);
+  grid-template-columns: 2fr repeat(3, 1fr);
   gap: 40px;
   position: relative;
   z-index: 1;
@@ -58,14 +59,11 @@
 .footer-brand-name {
   font-size: 24px;
   font-weight: 900;
-  background: linear-gradient(135deg, #61dafb, #a78bfa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--primary-green);
 }
 
 .footer-tagline {
-  color: #8892b0;
+  color: var(--text-muted);
   margin: 0 0 25px 0;
   line-height: 1.6;
   max-width: 300px;
@@ -82,28 +80,31 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: rgba(97, 218, 251, 0.1);
-  border: 1px solid rgba(97, 218, 251, 0.2);
-  border-radius: 10px;
+  background: var(--light-gray);
+  border: 1px solid var(--primary-green);
+  border-radius: 6px;
   font-size: 18px;
   text-decoration: none;
   transition: all 0.3s ease;
+  color: var(--primary-green);
 }
 
 .social-link:hover {
-  background: rgba(97, 218, 251, 0.2);
-  border-color: rgba(97, 218, 251, 0.4);
+  background: var(--primary-green);
+  border-color: var(--primary-green);
   transform: translateY(-3px);
-  box-shadow: 0 5px 20px rgba(97, 218, 251, 0.3);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  color: var(--white);
 }
 
 .footer-title {
-  color: #e2e8f0;
+  color: var(--text-dark);
   font-size: 16px;
   font-weight: 700;
   margin: 0 0 20px 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  color: var(--primary-green);
 }
 
 .footer-links {
@@ -116,7 +117,7 @@
 }
 
 .footer-links li a {
-  color: #8892b0;
+  color: var(--text-muted);
   text-decoration: none;
   font-size: 14px;
   transition: all 0.3s ease;
@@ -131,12 +132,12 @@
   left: 0;
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, #61dafb, #a78bfa);
+  background: var(--primary-green);
   transition: width 0.3s ease;
 }
 
 .footer-links li a:hover {
-  color: #61dafb;
+  color: var(--primary-green);
   transform: translateX(5px);
 }
 
@@ -145,8 +146,8 @@
 }
 
 .footer-bottom {
-  background: rgba(5, 5, 15, 0.8);
-  border-top: 1px solid rgba(97, 218, 251, 0.1);
+  background: var(--lighter-gray);
+  border-top: 1px solid var(--gray-200);
   padding: 25px 40px;
 }
 
@@ -161,7 +162,7 @@
 }
 
 .copyright {
-  color: #8892b0;
+  color: var(--text-muted);
   margin: 0;
   font-size: 14px;
 }
@@ -177,19 +178,20 @@
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  background: rgba(97, 218, 251, 0.1);
-  border: 1px solid rgba(97, 218, 251, 0.2);
+  background: var(--light-gray);
+  border: 1px solid var(--primary-green);
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  color: #61dafb;
+  color: var(--primary-green);
   transition: all 0.3s ease;
 }
 
 .badge:hover {
-  background: rgba(97, 218, 251, 0.15);
-  border-color: rgba(97, 218, 251, 0.3);
+  background: var(--primary-green);
+  border-color: var(--primary-green);
   transform: translateY(-2px);
+  color: var(--white);
 }
 
 .badge-icon {
@@ -198,7 +200,7 @@
 
 @media (max-width: 1024px) {
   .footer-content {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 35px;
   }
 
@@ -209,13 +211,13 @@
 
 @media (max-width: 768px) {
   .footer-content {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     padding: 50px 30px 30px 30px;
     gap: 30px;
   }
 
   .footer-section:first-child {
-    grid-column: 1 / -1;
+    grid-column: 1;
     text-align: center;
   }
 
@@ -251,10 +253,6 @@
     grid-template-columns: 1fr;
     padding: 40px 20px 25px 20px;
     gap: 25px;
-  }
-
-  .footer-section:first-child {
-    grid-column: 1;
   }
 
   .footer-bottom {
