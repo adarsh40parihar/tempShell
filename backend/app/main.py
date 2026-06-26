@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+from pathlib import Path
 from app.core.config import settings
 from app.api.v1 import auth, shell
 from app.db.database import init_db
-from app.services.k8s_service import K8sService
 import logging
 
 logging.basicConfig(
@@ -13,24 +14,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-@asynccontextmanager    #Context Manager = automatic setup + automatic cleanup.”
+@asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info("Initializing database...")
+    logger.info(“Initializing database...”)
     init_db()
-    
-    # Cleanup old shell pods
-    logger.info("Cleaning up old shell pods...")
-    k8s_service = K8sService()
-    k8s_service.cleanup_old_pods()
-    
-    logger.info("Application startup complete")
+    logger.info(“Application startup complete”)
 
-    yield    # <-- yaha app start hoti hai
-    
+    yield
+
     # Shutdown
-    k8s_service.cleanup_old_pods()
-    logger.info("Shutting down application...")
+    logger.info(“Shutting down application...”)
 
 app = FastAPI(
     title="TempShell API",
@@ -57,6 +51,11 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(shell.router, prefix="/api/v1/shell", tags=["Shell"])
+
+# Mount static files for React frontend
+static_dir = Path(__file__).parent.parent.parent / "static"
+if static_dir.exists():
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
 @app.get("/health")
 async def health_check():

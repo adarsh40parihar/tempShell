@@ -1,6 +1,12 @@
 # Docker Setup for TempShell
 
-This project is now containerized using Docker Compose. Kubernetes support has been removed in favor of simpler Docker-based deployment.
+This project uses Docker Compose with a simplified single-machine setup. The React frontend is built and served as static files from the FastAPI backend.
+
+## Architecture
+
+- **Single Container for Backend**: Runs FastAPI with built-in React frontend
+- **Single Container for Database**: MySQL 8.0
+- **No Nginx**: Frontend served directly from FastAPI static file mounting
 
 ## Prerequisites
 
@@ -11,7 +17,7 @@ This project is now containerized using Docker Compose. Kubernetes support has b
 
 ### 1. Setup Environment Variables
 
-Copy the example environment file and customize as needed:
+Copy the example environment file:
 
 ```bash
 cp .env.example .env
@@ -26,26 +32,18 @@ docker-compose up --build
 ```
 
 This command will:
-- Build the backend and frontend images
+- Build the React frontend
+- Build the backend Docker image with embedded frontend
 - Start MySQL database
-- Start the backend service
-- Start the frontend service
+- Start the backend service (serving both API and frontend)
 
-Services will be available at:
-- **Frontend**: http://localhost
-- **Backend API**: http://localhost:8000
-- **MySQL**: localhost:3306
+### 3. Access the Application
 
-### 3. Verify Services are Running
+- **Frontend**: http://localhost:8000
+- **API**: http://localhost:8000/api/v1/...
+- **Health Check**: http://localhost:8000/health
 
-```bash
-docker-compose ps
-```
-
-You should see three running containers:
-- `tempshell-mysql`
-- `tempshell-backend`
-- `tempshell-frontend`
+All traffic goes through port 8000 only.
 
 ## Common Commands
 
@@ -90,35 +88,44 @@ Backend:
 docker-compose exec backend bash
 ```
 
-Frontend:
-```bash
-docker-compose exec frontend sh
-```
-
 ## Development Workflow
 
 ### Backend Development
 
-The backend directory is mounted as a volume. Changes to Python code will be reflected immediately (if using auto-reload configuration).
+Since the backend source code is not mounted as a volume (for production parity), you need to rebuild:
 
-To restart the backend service:
 ```bash
-docker-compose restart backend
+docker-compose build backend
+docker-compose up backend
 ```
+
+Or for faster iteration, consider mounting the code during development:
+
+Edit `docker-compose.yml` and add under `backend` service:
+```yaml
+volumes:
+  - ./backend:/app
+```
+
+Then restart: `docker-compose up --build`
 
 ### Frontend Development
 
-For development, you might want to run the frontend locally instead of in Docker:
+To develop the frontend with hot reload:
 
 ```bash
-# In terminal 1: Start Docker services (without frontend)
-docker-compose down
-docker-compose up --build -d mysql backend
+# In terminal 1: Start only the database and backend API (without rebuilding frontend)
+docker-compose up mysql backend
 
-# In terminal 2: Run frontend locally
+# In terminal 2: Run frontend development server locally
 cd frontend
 npm install
 npm start
+```
+
+Update the frontend's `.env` file to point to the backend:
+```
+REACT_APP_API_URL=http://localhost:8000/api/v1
 ```
 
 ## Environment Variables
@@ -136,16 +143,17 @@ All configuration is managed through the `.env` file. Key variables:
 - Change `DB_PASSWORD` to a strong password
 - Do not commit `.env` file with real credentials
 - The `.env` file should only exist on your local machine and servers
+- In production, use proper secret management tools (AWS Secrets Manager, HashiCorp Vault)
 
 ## Troubleshooting
 
 ### Port Already in Use
 
-If ports 80, 8000, or 3306 are already in use:
+If port 8000 or 3306 are already in use:
 
 1. Find the process using the port:
    ```bash
-   lsof -i :80
+   lsof -i :8000
    ```
 
 2. Either kill the process or modify the port mappings in `docker-compose.yml`
@@ -164,22 +172,102 @@ docker-compose logs mysql
 
 Wait a bit longer for MySQL to initialize on first run.
 
-### Backend Cannot Connect to Database
+### Frontend Not Loading
 
-Ensure MySQL is fully started and healthy before backend starts. The `depends_on` condition ensures this, but you can manually restart:
-
+Check that the React build succeeded:
 ```bash
-docker-compose restart mysql backend
+docker-compose logs backend | grep -i "mount\|static"
 ```
 
-## Deploying to Production
+Verify the static directory exists in the container:
+```bash
+docker-compose exec backend ls -la /app/static
+```
 
-For production deployment:
+### Build Issues
 
-1. Use a proper `.env` file with secure credentials
-2. Use proper secret management (AWS Secrets Manager, HashiCorp Vault, etc.)
-3. Consider using Docker Swarm or Kubernetes for orchestration
-4. Set resource limits appropriately
-5. Use health checks to ensure service availability
-6. Implement proper backup strategy for MySQL volumes
-7. Use a reverse proxy (nginx, Traefik) in front of the containers
+If the build fails due to npm dependencies:
+
+```bash
+# Clear Docker cache and rebuild
+docker-compose build --no-cache
+```
+
+## Production Deployment on EC2
+
+### 1. SSH into EC2 instance
+```bash
+ssh ec2-user@your-instance-ip
+```
+
+### 2. Install Docker and Docker Compose
+```bash
+sudo yum install -y docker docker-compose
+sudo usermod -a -G docker ec2-user
+```
+
+### 3. Clone your repository and setup
+```bash
+git clone your-repo-url
+cd tempShell
+cp .env.example .env
+```
+
+### 4. Update .env with production values
+```bash
+nano .env
+# Change SECRET_KEY, DB_PASSWORD, CORS_ORIGINS for your domain
+```
+
+### 5. Start services
+```bash
+docker-compose -f docker-compose.yml up -d
+```
+
+### 6. Verify it's running
+```bash
+curl http://localhost:8000
+docker-compose ps
+```
+
+### 7. (Optional) Setup domain with nginx reverse proxy
+
+Create `/etc/nginx/sites-available/tempshell`:
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Then enable and restart nginx:
+```bash
+sudo ln -s /etc/nginx/sites-available/tempshell /etc/nginx/sites-enabled/
+sudo nginx -s reload
+```
+
+### 8. Setup SSL (recommended)
+```bash
+sudo apt-get install certbot python3-certbot-nginx
+sudo certbot --nginx -d your-domain.com
+```
+
+## Monitoring
+
+Check container resource usage:
+```bash
+docker stats
+```
+
+View realtime logs:
+```bash
+docker-compose logs -f --tail=100
+```
