@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -10,6 +11,7 @@ from utils.config import settings
 from utils.database import init_db
 from routers.auth import router as auth_router
 from routers.shell import router as shell_router
+import controllers.shell_controller as shell_controller
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,8 +24,11 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info("Starting up — initializing database...")
     init_db()
+    # Start background task: kills user containers idle for >10 minutes
+    cleanup_task = asyncio.create_task(shell_controller.cleanup_idle_containers())
     logger.info("Ready.")
     yield
+    cleanup_task.cancel()  # Stop the background task on shutdown
     logger.info("Shutting down.")
 
 
