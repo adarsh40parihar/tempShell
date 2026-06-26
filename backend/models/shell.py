@@ -27,6 +27,7 @@ class CommandResponse(BaseModel):
     output: str
     exit_code: int
     executed_at: datetime
+    cwd: str = "/workspace"
 
 
 class ShellStatus(BaseModel):

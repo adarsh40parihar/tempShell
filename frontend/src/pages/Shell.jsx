@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import {
+  Terminal,
+  Trash2,
+  ChevronRight,
+  Circle,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import "./Shell.css";
 
@@ -9,37 +17,29 @@ const Shell = () => {
   const [loading, setLoading] = useState(false);
   const [commandHistory, setCommandHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [cwd, setCwd] = useState("/workspace");
 
   const terminalRef = useRef(null);
   const inputRef = useRef(null);
+  const { API_URL, user } = useAuth();
 
-  const { API_URL } = useAuth();
-
-  // Auto-scroll terminal on new output
   useEffect(() => {
     if (terminalRef.current) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
     }
   }, [history]);
 
-  // Auto-focus input after loading completes
   useEffect(() => {
-    if (!loading && inputRef.current) {
-      inputRef.current.focus();
-    }
+    if (!loading && inputRef.current) inputRef.current.focus();
   }, [loading]);
 
-  // Initial welcome messages (hidden after first command)
   useEffect(() => {
     setHistory([
-      { type: "welcome", content: "Welcome to TempShell." },
-      {
-        type: "welcome",
-        content: "Your commands run in an isolated, secure environment.",
-      },
-      { type: "welcome", content: 'Type "help" to get started.' },
+      { type: "system", content: `TempShell v2.0  —  Isolated Alpine Linux environment` },
+      { type: "system", content: `Session started for ${user?.username ?? "user"}. Type a command to begin.` },
+      { type: "system", content: `─────────────────────────────────────────────` },
     ]);
-  }, []);
+  }, [user]);
 
   const executeCommand = async (e) => {
     e.preventDefault();
@@ -47,15 +47,13 @@ const Shell = () => {
     if (!trimmed || loading) return;
 
     setLoading(true);
-
-    // Add to local command history for navigation
     setCommandHistory((prev) => [...prev, trimmed]);
     setHistoryIndex(-1);
 
-    // Remove welcome lines on first command and show the input line
+    // Show the typed command immediately
     setHistory((prev) => [
       ...prev.filter((h) => h.type !== "welcome"),
-      { type: "input", content: trimmed },
+      { type: "input", content: trimmed, cwd },
     ]);
 
     try {
@@ -63,13 +61,13 @@ const Shell = () => {
         command: trimmed,
       });
 
+      const output = res.data?.output ?? "";
+      const newCwd = res.data?.cwd ?? cwd;   // update path from backend
+      setCwd(newCwd);
+
       setHistory((prev) => [
         ...prev,
-        {
-          type: "output",
-          content: res.data?.output ?? "",
-          exit_code: res.data?.exit_code,
-        },
+        { type: "output", content: output, exit_code: res.data?.exit_code },
       ]);
     } catch (error) {
       setHistory((prev) => [
@@ -91,130 +89,124 @@ const Shell = () => {
   const handleKeyDown = (e) => {
     if (e.key === "ArrowUp") {
       e.preventDefault();
-      if (commandHistory.length === 0) return;
-      const newIndex = Math.min(historyIndex + 1, commandHistory.length - 1);
-      setHistoryIndex(newIndex);
-      setCommand(commandHistory[commandHistory.length - 1 - newIndex]);
+      if (!commandHistory.length) return;
+      const idx = Math.min(historyIndex + 1, commandHistory.length - 1);
+      setHistoryIndex(idx);
+      setCommand(commandHistory[commandHistory.length - 1 - idx]);
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
       if (historyIndex <= 0) {
         setHistoryIndex(-1);
         setCommand("");
       } else {
-        const newIndex = historyIndex - 1;
-        setHistoryIndex(newIndex);
-        setCommand(commandHistory[commandHistory.length - 1 - newIndex]);
+        const idx = historyIndex - 1;
+        setHistoryIndex(idx);
+        setCommand(commandHistory[commandHistory.length - 1 - idx]);
       }
     }
   };
 
-  const clearTerminal = () => setHistory([]);
-
-  const focusInput = () => {
-    if (inputRef.current && !loading) {
-      inputRef.current.focus();
-    }
-  };
-
   return (
-    <div className="shell-container" onClick={focusInput}>
-      <div className="shell-content">
-        <div className="terminal-window">
-          <div className="terminal-header">
-            <div className="terminal-title">
-              <span className="terminal-icon">⚡</span>
-              <span>Terminal</span>
+    <div className="shell-page" onClick={() => inputRef.current?.focus()}>
+      <div className="shell-wrapper">
+
+        {/* Terminal card */}
+        <div className="terminal-card">
+
+          {/* Title bar — mimics macOS window */}
+          <div className="terminal-titlebar">
+            <div className="titlebar-dots">
+              <span className="dot dot-red" />
+              <span className="dot dot-yellow" />
+              <span className="dot dot-green" />
+            </div>
+            <div className="titlebar-label">
+              <Terminal size={13} className="titlebar-icon" />
+              <span>shell — {user?.username ?? "user"}@tempshell</span>
             </div>
             <button
-              onClick={clearTerminal}
-              className="clear-btn"
+              className="titlebar-clear"
+              onClick={(e) => { e.stopPropagation(); setHistory([]); }}
               title="Clear terminal"
-              type="button"
             >
-              <span>🗑️</span>
-              <span>Clear</span>
+              <Trash2 size={13} />
+              Clear
             </button>
           </div>
 
-          <div className="shell-terminal" ref={terminalRef}>
-            {history.map((entry, index) => (
-              <div
-                key={index}
-                className={`terminal-line terminal-${entry.type}`}
-              >
+          {/* Output area */}
+          <div className="terminal-body" ref={terminalRef}>
+            {history.map((entry, i) => (
+              <div key={i} className={`term-line term-${entry.type}`}>
                 {entry.type === "input" && (
-                  <div className="terminal-command">
-                    <span className="terminal-prompt">$</span>
-                    <span className="command-text">{entry.content}</span>
+                  <div className="term-input-row">
+                    <span className="term-path">{entry.cwd ?? "/workspace"}</span>
+                    <ChevronRight size={12} className="term-chevron" />
+                    <span className="term-cmd">{entry.content}</span>
                   </div>
                 )}
-
                 {entry.type === "output" && (
-                  <div className="terminal-output">
-                    <pre>{entry.content}</pre>
-                  </div>
+                  <pre className="term-output">{entry.content}</pre>
                 )}
-
                 {entry.type === "error" && (
-                  <div className="terminal-error">
-                    <span className="error-icon">✖</span>
+                  <div className="term-error-row">
+                    <AlertCircle size={13} />
                     <pre>{entry.content}</pre>
                   </div>
                 )}
-
                 {entry.type === "system" && (
-                  <div className="terminal-system">{entry.content}</div>
-                )}
-
-                {entry.type === "welcome" && (
-                  <div className="terminal-welcome">{entry.content}</div>
+                  <div className="term-system">{entry.content}</div>
                 )}
               </div>
             ))}
 
             {loading && (
-              <div className="terminal-line terminal-loading">
-                <div className="loading-indicator">
-                  <div className="spinner"></div>
-                  <span>Executing command...</span>
-                </div>
+              <div className="term-line term-loading">
+                <Loader2 size={13} className="spin" />
+                <span>running…</span>
               </div>
             )}
           </div>
 
-          <form onSubmit={executeCommand} className="command-input-container">
-            <div className="input-wrapper">
-              <span className="prompt-label">$</span>
-              <input
-                ref={inputRef}
-                type="text"
-                value={command}
-                onChange={(e) => setCommand(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type a command... (↑/↓ for history)"
-                className="command-input"
-                disabled={loading}
-                autoFocus
-              />
-            </div>
+          {/* Input row */}
+          <form className="terminal-inputbar" onSubmit={executeCommand}>
+            <span className="input-path">{cwd}</span>
+            <ChevronRight size={13} className="input-chevron" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={command}
+              onChange={(e) => setCommand(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="type a command…"
+              className="terminal-input"
+              disabled={loading}
+              autoFocus
+              spellCheck={false}
+              autoCapitalize="none"
+              autoComplete="off"
+            />
             <button
               type="submit"
               disabled={loading || !command.trim()}
-              className="execute-btn"
+              className="input-run-btn"
             >
-              {loading ? "Executing..." : "Execute"}
+              {loading ? <Loader2 size={14} className="spin" /> : <ChevronRight size={14} />}
             </button>
           </form>
         </div>
 
-        <div className="shell-footer">
-          <span className="footer-status">
-            <span className="status-dot"></span>
-            Connected and Ready
-          </span>
-          <span className="footer-hint">
-            💡 Pro tip: Use arrow keys to navigate history
-          </span>
+        {/* Status bar */}
+        <div className="shell-statusbar">
+          <div className="status-left">
+            <Circle size={7} fill="var(--accent)" className="status-dot" />
+            <span>Connected</span>
+            <span className="status-sep">·</span>
+            <span className="status-muted">Alpine Linux · Docker isolated</span>
+          </div>
+          <div className="status-right">
+            <span className="status-muted">↑↓ history</span>
+          </div>
         </div>
       </div>
     </div>

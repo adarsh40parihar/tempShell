@@ -1,20 +1,18 @@
-import React from 'react';
-import './Footer.css';
+import React from "react";
+import { Terminal } from "lucide-react";
+import "./Footer.css";
 
 function Footer() {
-  const currentYear = new Date().getFullYear();
-
   return (
     <footer className="footer">
-      <div className="footer-content">
-        <p className="copyright">© {currentYear} TempShell. All rights reserved.</p>
-        <div className="footer-links">
-          <a href="#privacy">Privacy</a>
-          <span className="separator">•</span>
-          <a href="#terms">Terms</a>
-          <span className="separator">•</span>
-          <a href="#security">Security</a>
+      <div className="footer-inner">
+        <div className="footer-brand">
+          <Terminal size={13} className="footer-icon" />
+          <span>TempShell</span>
         </div>
+        <p className="footer-copy">
+          © {new Date().getFullYear()} TempShell. All rights reserved.
+        </p>
       </div>
     </footer>
   );

@@ -1,54 +1,76 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Terminal, User, LogOut, LogIn, UserPlus } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import "./Navbar.css";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
     navigate("/");
   };
 
+  const isActive = (path) => location.pathname === path;
+
   return (
-    <nav className="navbar">
-      <div className="navbar-container">
+    <header className="navbar">
+      <div className="navbar-inner">
+        {/* Logo */}
         <Link to="/" className="navbar-logo">
-          <span className="logo-icon">⚡</span>
+          <div className="logo-mark">
+            <Terminal size={16} strokeWidth={2.5} />
+          </div>
           <span className="logo-text">TempShell</span>
         </Link>
 
-        <div className="nav-menu">
+        {/* Right side */}
+        <nav className="navbar-nav">
           {user ? (
             <>
-              <Link to="/shell" className="nav-link">
-                <span className="nav-link-icon">▶</span>
-                <span>Terminal</span>
+              <Link
+                to="/shell"
+                className={`nav-pill ${isActive("/shell") ? "nav-pill--active" : ""}`}
+              >
+                <Terminal size={14} />
+                Terminal
               </Link>
+
+              <div className="nav-divider" />
+
               <div className="nav-user">
-                <span className="user-icon">👤</span>
+                <div className="user-avatar">
+                  {user.username.charAt(0).toUpperCase()}
+                </div>
                 <span className="user-name">{user.username}</span>
               </div>
-              <button onClick={handleLogout} className="nav-btn logout-btn">
-                <span className="btn-icon">🚪</span>
-                <span>Logout</span>
+
+              <button onClick={handleLogout} className="nav-logout">
+                <LogOut size={14} />
+                Logout
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="nav-link">
-                <span>Login</span>
+              <Link
+                to="/login"
+                className={`nav-pill ${isActive("/login") ? "nav-pill--active" : ""}`}
+              >
+                <LogIn size={14} />
+                Login
               </Link>
-              <Link to="/signup" className="nav-btn signup-btn">
-                <span>Sign Up</span>
+              <Link to="/signup" className="nav-cta">
+                <UserPlus size={14} />
+                Sign Up
               </Link>
             </>
           )}
-        </div>
+        </nav>
       </div>
-    </nav>
+    </header>
   );
 };
 

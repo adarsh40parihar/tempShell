@@ -1,20 +1,13 @@
+/* App shell — no top padding, navbar handles spacing */
 .App {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--white);
+  background: var(--bg);
 }
 
 .main-content {
   flex: 1;
-  padding: 0;
-  max-width: 100%;
-  margin: 0;
-  width: 100%;
-}
-
-@media (max-width: 768px) {
-  .main-content {
-    padding: 0;
-  }
+  display: flex;
+  flex-direction: column;
 }

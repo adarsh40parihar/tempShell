@@ -192,7 +192,14 @@ def run_command(command: str, username: str, timeout: int = 10) -> tuple[str, in
 def execute(command: CommandRequest, username: str) -> CommandResponse:
     logger.info(f"[{username}] Running: {command.command!r}")
     output, exit_code = run_command(command.command, username)
-    return CommandResponse(output=output, exit_code=exit_code, executed_at=datetime.utcnow())
+    # Always return the current tracked CWD so the frontend prompt stays in sync
+    current_cwd = container_cwd.get(username, "/workspace")
+    return CommandResponse(
+        output=output,
+        exit_code=exit_code,
+        executed_at=datetime.utcnow(),
+        cwd=current_cwd,
+    )
 
 
 def get_status(username: str) -> ShellStatus:
